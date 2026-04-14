@@ -1,0 +1,219 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>일클래스 & 바탕 통합 채점기</title>
+    <style>
+        :root {
+            --primary-color: #1e3c72;
+            --secondary-color: #2a5298;
+            --bg-gradient: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            --white: rgba(255, 255, 255, 0.98);
+        }
+
+        body { 
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif; 
+            background: var(--bg-gradient); 
+            display: flex; justify-content: center; align-items: center; 
+            min-height: 100vh; margin: 0; color: #333;
+        }
+
+        .container { 
+            background: var(--white); 
+            padding: 40px 30px; border-radius: 24px; 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3); 
+            width: 100%; max-width: 380px; text-align: center;
+        }
+
+        h2 { margin-top: 0; color: var(--primary-color); font-size: 26px; letter-spacing: -1px; }
+
+        .input-group { margin-bottom: 20px; text-align: left; }
+        
+        label { 
+            font-size: 13px; font-weight: bold; color: #555; 
+            margin-left: 5px; text-transform: uppercase; display: block;
+        }
+
+        select, input { 
+            padding: 15px; margin-top: 8px; border: 2px solid #eef2f7; border-radius: 12px; 
+            width: 100%; font-size: 16px; box-sizing: border-box; outline: none; transition: all 0.2s;
+            background-color: white;
+        }
+
+        select:focus, input:focus { border-color: var(--primary-color); background-color: #f8faff; }
+        
+        #batangInputArea { display: none; }
+        #normalInputArea { display: block; }
+
+        button { 
+            padding: 18px; background: var(--primary-color); color: white; border: none; 
+            border-radius: 12px; width: 100%; font-size: 18px; font-weight: bold; 
+            cursor: pointer; transition: all 0.2s; margin-top: 10px;
+        }
+
+        button:hover { background: var(--secondary-color); }
+        button:active { transform: scale(0.97); }
+
+        #result { margin-top: 25px; min-height: 60px; font-size: 16px; line-height: 1.6; }
+
+        .success { color: #27ae60; background: #ebf7ee; padding: 15px; border-radius: 12px; font-weight: bold; }
+        .error { color: #e74c3c; background: #fdf2f2; padding: 15px; border-radius: 12px; font-weight: bold; }
+        .info { color: #7f8c8d; background: #f4f7f6; padding: 15px; border-radius: 12px; }
+        
+        .small-label { 
+            font-size: 12px; color: var(--primary-color); font-weight: bold;
+            display: block; margin-top: 15px; margin-left: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>✍️ 통합 채점기</h2>
+    
+    <div class="input-group">
+        <label>교재 선택</label>
+        <select id="bookSelect" onchange="toggleView()">
+            <option value="book1">일클래스 (기본)</option>
+            <option value="batang1">바탕 모의고사 1회</option>
+        </select>
+    </div>
+
+    <div id="normalInputArea">
+        <div class="input-group">
+            <label>페이지 번호 (±1 허용)</label>
+            <input type="number" id="pageInput" placeholder="페이지 번호 입력" inputmode="numeric">
+        </div>
+        <div class="input-group">
+            <label>답안 입력</label>
+            <input type="text" id="answerInput" placeholder="답안 연속 입력" inputmode="numeric">
+        </div>
+    </div>
+
+    <div id="batangInputArea">
+        <div class="input-group">
+            <label>선택 과목</label>
+            <select id="subjectSelect">
+                <option value="hwajak">화법과 작문</option>
+                <option value="unmae">언어와 매체</option>
+            </select>
+        </div>
+        <div class="input-group">
+            <label>공통 과목 (1~34번)</label>
+            <input type="text" id="commonAns" placeholder="34자리 숫자 입력" inputmode="numeric">
+            
+            <span class="small-label">선택 과목 (35~45번)</span>
+            <input type="text" id="selectAns" placeholder="11자리 숫자 입력" inputmode="numeric">
+        </div>
+    </div>
+
+    <button onclick="check()">채점하기</button>
+
+    <div id="result"></div>
+</div>
+
+<script>
+    const allAnswerKeys = {
+        "book1": {
+            "9": "123345", "12": "123345", "17": "4255", "20": "51442", "25": "454252", "30": "2413", "35": "4343",
+            "42": "142555", "45": "5123", "50": "42422", "53": "5311", "58": "2432", "62": "5523", "66": "5513",
+            "72": "234451", "75": "5454", "77": "3152", "82": "345", "86": "43534", "90": "3554",
+            "96": "231521", "99": "221", "101": "5232", "104": "213325", "108": "452", "112": "51534",
+            "117": "143", "120": "454112", "124": "3441", "130": "13154", "134": "2121", "138": "33423",
+            "143": "441", "146": "134323", "149": "3355", "154": "432", "158": "14543", "162": "234",
+            "167": "25433", "172": "453212", "176": "253", "182": "5522", "186": "135", "190": "2515",
+            "195": "1542", "200": "33", "204": "234", "208": "3423", "212": "1412", "217": "3244",
+            "224": "4342", "227": "5411", "229": "445", "234": "4455", "238": "3315", "242": "44435",
+            "247": "1515", "252": "5123", "256": "543", "259": "411", "262": "3435", "266": "2343"
+        },
+        "batang1": {
+            "common": "3131534424443224252335553424551332",
+            "hwajak": "41334234554",
+            "unmae": "42532135342"
+        }
+    };
+
+    function toggleView() {
+        const book = document.getElementById('bookSelect').value;
+        document.getElementById('normalInputArea').style.display = (book === 'batang1') ? 'none' : 'block';
+        document.getElementById('batangInputArea').style.display = (book === 'batang1') ? 'block' : 'none';
+        document.getElementById('result').innerHTML = "";
+    }
+
+    function cleanAns(str) {
+        if (!str) return "";
+        return str.replace(/①/g, '1').replace(/②/g, '2').replace(/③/g, '3').replace(/④/g, '4').replace(/⑤/g, '5').replace(/[^1-5]/g, '');
+    }
+
+    function check() {
+        const book = document.getElementById('bookSelect').value;
+        const resultDiv = document.getElementById('result');
+        let wrongPositions = [];
+
+        if (book === 'batang1') {
+            const subject = document.getElementById('subjectSelect').value;
+            const userCommon = cleanAns(document.getElementById('commonAns').value);
+            const userSelect = cleanAns(document.getElementById('selectAns').value);
+            
+            const correctCommon = allAnswerKeys.batang1.common;
+            const correctSelect = allAnswerKeys.batang1[subject];
+
+            if (userCommon.length !== 34 || userSelect.length !== 11) {
+                resultDiv.innerHTML = `<div class='info'>글자 수를 확인해 주세요.<br>(현재 공통:${userCommon.length}/34, 선택:${userSelect.length}/11)</div>`;
+                return;
+            }
+
+            for (let i = 0; i < 34; i++) {
+                if (userCommon[i] !== correctCommon[i]) wrongPositions.push(i + 1);
+            }
+            for (let i = 0; i < 11; i++) {
+                if (userSelect[i] !== correctSelect[i]) wrongPositions.push(i + 35);
+            }
+
+        } else {
+            const inputPage = parseInt(document.getElementById('pageInput').value.trim());
+            const userAns = cleanAns(document.getElementById('answerInput').value);
+            const currentKey = allAnswerKeys[book];
+
+            // 페이지 찾기 (입력값, 입력값-1, 입력값+1 순서로 확인)
+            let foundPage = null;
+            if (currentKey[inputPage]) {
+                foundPage = inputPage;
+            } else if (currentKey[inputPage - 1]) {
+                foundPage = inputPage - 1;
+            } else if (currentKey[inputPage + 1]) {
+                foundPage = inputPage + 1;
+            }
+
+            if (!foundPage) {
+                resultDiv.innerHTML = "<div class='info'>입력한 페이지(±1) 근처에 정답 정보가 없습니다.</div>";
+                return;
+            }
+
+            const correctAns = currentKey[foundPage];
+            if (userAns.length !== correctAns.length) {
+                resultDiv.innerHTML = `<div class='info'>[P.${foundPage} 기준] 총 ${correctAns.length}개의 답이 필요합니다.</div>`;
+                return;
+            }
+
+            for (let i = 0; i < correctAns.length; i++) {
+                if (userAns[i] !== correctAns[i]) wrongPositions.push(i + 1);
+            }
+            
+            // 만약 보정된 페이지가 쓰였다면 사용자에게 알려줌
+            if (foundPage !== inputPage) {
+                resultDiv.innerHTML += `<div style="font-size:11px; color:#7f8c8d; margin-bottom:5px;">* P.${foundPage} 정답으로 채점되었습니다.</div>`;
+            }
+        }
+
+        if (wrongPositions.length === 0) {
+            resultDiv.innerHTML = "<div class='success'>🎉 모두 정답입니다!</div>";
+        } else {
+            resultDiv.innerHTML = `<div class='error'>❌ 오답 번호: ${wrongPositions.join(', ')}번</div>`;
+        }
+    }
+</script>
+</body>
+</html>
