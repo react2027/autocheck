@@ -42,7 +42,7 @@
         <label>학습 교재</label>
         <select id="bookSelect" onchange="updateUI()">
             <option value="book1">일클래스 (日)</option>
-            <option value="chwi">취클래스 (就)</option>
+            <option value="chwi">취클래스 (取)</option>
             <option value="batang1">바탕 모의고사 1회</option>
         </select>
     </div>
@@ -78,7 +78,7 @@
         </div>
     </div>
 
-    <div id=\"ansGroup\" class=\"input-group\">
+    <div id="ansGroup" class="input-group">
         <label>학생 답안 입력</label>
         <textarea id="answerInput" placeholder="정답을 숫자만 연속으로 적어주세요."></textarea>
     </div>
@@ -133,12 +133,18 @@
         const mode = document.getElementById('modeSelect').value;
         const isBatang = (book === 'batang1');
         
+        // 바탕 모의고사일 때 일반 입력창들 제어
         document.getElementById('modeGroup').style.display = isBatang ? 'none' : 'block';
         document.getElementById('ansGroup').style.display = isBatang ? 'none' : 'block';
         document.getElementById('singleInputArea').style.display = isBatang ? 'none' : (mode === 'single' ? 'block' : 'none');
         document.getElementById('weekInputArea').style.display = isBatang ? 'none' : (mode === 'week' ? 'block' : 'none');
+        
+        // 과목 필터링 UI (주차별 채점 시에만 노출, 바탕일 땐 무조건 숨김)
         document.getElementById('subjectFilterGroup').style.display = (!isBatang && mode === 'week') ? 'block' : 'none';
+
+        // 바탕 전용 UI
         document.getElementById('batangInputArea').style.display = isBatang ? 'block' : 'none';
+        
         document.getElementById('result').innerHTML = "";
     }
 
@@ -153,12 +159,14 @@
         const resultDiv = document.getElementById('result');
         resultDiv.innerHTML = "";
 
+        // 1. 바탕 모의고사 채점 로직
         if (book === 'batang1') {
             const sub = document.getElementById('subjectSelect').value;
             const uCom = cleanAns(document.getElementById('commonAns').value);
             const uSel = cleanAns(document.getElementById('selectAns').value);
             const cCom = "3131534424443224252335553424551332";
             const cSel = (sub==='hwajak') ? "41334234554" : "42532135342";
+            
             if(uCom.length !== 34 || uSel.length !== 11) {
                 resultDiv.innerHTML = `<div class='res-item res-info'>답안 길이를 확인해 주세요.<br>공통:${uCom.length}/34, 선택:${uSel.length}/11</div>`;
                 return;
@@ -170,20 +178,24 @@
             return;
         }
 
+        // 2. 주차별 일괄 채점 로직
         if (mode === 'week') {
             const week = document.getElementById('weekInput').value;
             const subFilter = document.getElementById('subjectFilter').value;
             const userFullAns = cleanAns(document.getElementById('answerInput').value);
+            
             if(!weekData[book][week]) {
-                resultDiv.innerHTML = "<div class='res-item res-info'>데이터를 찾을 수 없습니다.</div>";
+                resultDiv.innerHTML = "<div class='res-item res-info'>해당 주차의 데이터를 찾을 수 없습니다.</div>";
                 return;
             }
+
             const targets = weekData[book][week].filter(item => subFilter === 'all' || item.c === subFilter);
             let totalCorrect = "";
             targets.forEach(item => totalCorrect += item.a);
 
             if (userFullAns.length !== totalCorrect.length) {
-                resultDiv.innerHTML = `<div class='res-item res-info'>문항 수가 다릅니다.<br>입력: ${userFullAns.length}개 / 필요: ${totalCorrect.length}개</div>`;
+                const subTitle = subFilter === 'doc' ? '독서만' : (subFilter === 'lit' ? '문학만' : '전체');
+                resultDiv.innerHTML = `<div class='res-item res-info'><b>[${subTitle}]</b> 문항 수가 다릅니다.<br>입력: ${userFullAns.length}개 / 필요: ${totalCorrect.length}개</div>`;
                 return;
             }
 
@@ -192,7 +204,9 @@
             let anyWrong = false;
             targets.forEach(passage => {
                 let pWrongs = [];
-                for (let i = 0; i < passage.a.length; i++) if (userFullAns[offset + i] !== passage.a[i]) pWrongs.push(i + 1);
+                for (let i = 0; i < passage.a.length; i++) {
+                    if (userFullAns[offset + i] !== passage.a[i]) pWrongs.push(i + 1);
+                }
                 const badge = passage.c === 'doc' ? '<span class="badge badge-doc">독서</span>' : '<span class="badge badge-lit">문학</span>';
                 if (pWrongs.length > 0) {
                     anyWrong = true;
@@ -200,9 +214,12 @@
                 }
                 offset += passage.a.length;
             });
+
             if (!anyWrong) resultDiv.innerHTML = "<div class='res-item res-success'>💯 만점입니다! 정말 대단해요!</div>";
             else resultDiv.innerHTML = finalHtml;
+
         } 
+        // 3. 지문/페이지별 개별 채점 로직
         else {
             const inputP = parseInt(document.getElementById('pageInput').value);
             const userAns = cleanAns(document.getElementById('answerInput').value);
@@ -211,17 +228,21 @@
                 found = weekData[book][w].find(it => Math.abs(it.p - inputP) <= 1);
                 if (found) break;
             }
+
             if (!found) {
-                resultDiv.innerHTML = "<div class='res-item res-info'>페이지를 다시 확인해 주세요.</div>";
+                resultDiv.innerHTML = "<div class='res-item res-info'>해당 페이지 근처에 지문 정보가 없습니다.</div>";
                 return;
             }
+
             if (userAns.length !== found.a.length) {
-                resultDiv.innerHTML = `<div class='res-item res-info'><b><${found.t}></b> 지문은 ${found.a.length}문항입니다.</div>`;
+                resultDiv.innerHTML = `<div class='res-item res-info'><b><${found.t}></b> 지문은 총 ${found.a.length}문항입니다.</div>`;
                 return;
             }
+
             let wrongs = [];
             for (let i = 0; i < found.a.length; i++) if (userAns[i] !== found.a[i]) wrongs.push(i + 1);
-            if (wrongs.length === 0) resultDiv.innerHTML = `<div class='res-item res-success'>🎉 <b><${found.t}></b> 모두 정답입니다!</div>`;
+
+            if (wrongs.length === 0) resultDiv.innerHTML = `<div class='res-item res-success'>🎉 <b><${found.t}></b> (${found.p}p) 모두 정답입니다!</div>`;
             else resultDiv.innerHTML = `<div class='res-item res-error'>❌ <b><${found.t}></b> (${found.p}p)<br>오답: ${wrongs.join(', ')}번</div>`;
         }
     }
