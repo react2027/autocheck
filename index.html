@@ -4,95 +4,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>일클래스 & 바탕 통합 채점기</title>
+    <title>일취월장 채점기</title>
     <style>
         :root {
-            --primary-color: #1e3c72;
-            --secondary-color: #2a5298;
-            --bg-gradient: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            --white: rgba(255, 255, 255, 0.98);
+            --primary: #1e3c72;
+            --secondary: #2a5298;
+            --success: #27ae60;
+            --error: #e74c3c;
+            --bg: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
         }
-
-        body { 
-            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif; 
-            background: var(--bg-gradient); 
-            display: flex; justify-content: center; align-items: center; 
-            min-height: 100vh; margin: 0; color: #333;
-        }
-
-        .container { 
-            background: var(--white); 
-            padding: 40px 30px; border-radius: 24px; 
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3); 
-            width: 100%; max-width: 380px; text-align: center;
-        }
-
-        h2 { margin-top: 0; color: var(--primary-color); font-size: 26px; letter-spacing: -1px; }
-
-        .input-group { margin-bottom: 20px; text-align: left; }
-        
-        label { 
-            font-size: 13px; font-weight: bold; color: #555; 
-            margin-left: 5px; text-transform: uppercase; display: block;
-        }
-
-        select, input { 
-            padding: 15px; margin-top: 8px; border: 2px solid #eef2f7; border-radius: 12px; 
-            width: 100%; font-size: 16px; box-sizing: border-box; outline: none; transition: all 0.2s;
-            background-color: white;
-        }
-
-        select:focus, input:focus { border-color: var(--primary-color); background-color: #f8faff; }
-        
-        #batangInputArea { display: none; }
-        #normalInputArea { display: block; }
-
-        button { 
-            padding: 18px; background: var(--primary-color); color: white; border: none; 
-            border-radius: 12px; width: 100%; font-size: 18px; font-weight: bold; 
-            cursor: pointer; transition: all 0.2s; margin-top: 10px;
-        }
-
-        button:hover { background: var(--secondary-color); }
-        button:active { transform: scale(0.97); }
-
-        #result { margin-top: 25px; min-height: 60px; font-size: 16px; line-height: 1.6; }
-
-        .success { color: #27ae60; background: #ebf7ee; padding: 15px; border-radius: 12px; font-weight: bold; }
-        .error { color: #e74c3c; background: #fdf2f2; padding: 15px; border-radius: 12px; font-weight: bold; }
-        .info { color: #7f8c8d; background: #f4f7f6; padding: 15px; border-radius: 12px; }
-        
-        .small-label { 
-            font-size: 12px; color: var(--primary-color); font-weight: bold;
-            display: block; margin-top: 15px; margin-left: 5px;
-        }
+        body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif; background: var(--bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; color: #333; }
+        .container { background: rgba(255, 255, 255, 0.98); padding: 30px; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); width: 100%; max-width: 420px; text-align: center; }
+        h2 { margin-top: 0; color: var(--primary); font-size: 26px; letter-spacing: -1.5px; font-weight: 800; }
+        .input-group { margin-bottom: 15px; text-align: left; }
+        label { font-size: 12px; font-weight: bold; color: #666; display: block; margin-bottom: 5px; }
+        select, input, textarea { width: 100%; padding: 12px; border: 2px solid #eef2f7; border-radius: 10px; font-size: 15px; box-sizing: border-box; outline: none; transition: 0.2s; }
+        select:focus, input:focus, textarea:focus { border-color: var(--primary); background: #f8faff; }
+        textarea { height: 80px; resize: none; letter-spacing: 2px; font-weight: bold; }
+        button { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 10px; font-size: 17px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        button:active { transform: scale(0.98); }
+        #result { margin-top: 20px; text-align: left; font-size: 14px; }
+        .res-item { padding: 12px; border-radius: 10px; margin-bottom: 10px; line-height: 1.6; border-left: 5px solid transparent; }
+        .res-success { background: #ebf7ee; color: var(--success); border-left-color: var(--success); }
+        .res-error { background: #fdf2f2; color: var(--error); border-left-color: var(--error); }
+        .res-info { background: #f4f7f6; color: #555; border-left-color: #7f8c8d; }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 5px; font-size: 11px; margin-right: 6px; font-weight: 800; color: white; text-transform: uppercase; }
+        .badge-doc { background: #3498db; }
+        .badge-lit { background: #9b59b6; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>✍️ 통합 채점기</h2>
+    <h2>🚀 일취월장 채점기</h2>
     
     <div class="input-group">
-        <label>교재 선택</label>
-        <select id="bookSelect" onchange="toggleView()">
-            <option value="book1">일클래스 (기본)</option>
+        <label>학습 교재</label>
+        <select id="bookSelect" onchange="updateUI()">
+            <option value="book1">일클래스 (日)</option>
+            <option value="chwi">취클래스 (取)</option>
             <option value="batang1">바탕 모의고사 1회</option>
         </select>
     </div>
 
-    <div id="normalInputArea">
+    <div id="modeGroup" class="input-group">
+        <label>채점 방식</label>
+        <select id="modeSelect" onchange="updateUI()">
+            <option value="single">지문별/페이지별 (건별)</option>
+            <option value="week">주차별 일괄 채점 (연속)</option>
+        </select>
+    </div>
+
+    <div id="subjectFilterGroup" class="input-group" style="display:none;">
+        <label>채점 범위 설정</label>
+        <select id="subjectFilter">
+            <option value="all">전체 (독서 + 문학)</option>
+            <option value="doc">독서 지문만</option>
+            <option value="lit">문학 지문만</option>
+        </select>
+    </div>
+
+    <div id="singleInputArea">
         <div class="input-group">
-            <label>페이지 번호 (±1 허용)</label>
-            <input type="number" id="pageInput" placeholder="페이지 번호 입력" inputmode="numeric">
-        </div>
-        <div class="input-group">
-            <label>답안 입력</label>
-            <input type="text" id="answerInput" placeholder="답안 연속 입력" inputmode="numeric">
+            <label>교재 페이지 번호</label>
+            <input type="number" id="pageInput" placeholder="페이지 번호 (±1 보정 가능)" inputmode="numeric">
         </div>
     </div>
 
-    <div id="batangInputArea">
+    <div id="weekInputArea" style="display:none;">
+        <div class="input-group">
+            <label>학습 주차</label>
+            <input type="number" id="weekInput" placeholder="숫자만 입력 (예: 1)" inputmode="numeric">
+        </div>
+    </div>
+
+    <div id="ansGroup" class="input-group">
+        <label>학생 답안 입력</label>
+        <textarea id="answerInput" placeholder="정답을 숫자만 연속으로 적어주세요."></textarea>
+    </div>
+
+    <div id="batangInputArea" style="display:none;">
         <div class="input-group">
             <label>선택 과목</label>
             <select id="subjectSelect">
@@ -102,117 +93,163 @@
         </div>
         <div class="input-group">
             <label>공통 과목 (1~34번)</label>
-            <input type="text" id="commonAns" placeholder="34자리 숫자 입력" inputmode="numeric">
-            
-            <span class="small-label">선택 과목 (35~45번)</span>
-            <input type="text" id="selectAns" placeholder="11자리 숫자 입력" inputmode="numeric">
+            <input type="text" id="commonAns" placeholder="34자리 정답 입력">
+            <label style="margin-top:10px;">선택 과목 (35~45번)</label>
+            <input type="text" id="selectAns" placeholder="11자리 정답 입력">
         </div>
     </div>
 
-    <button onclick="check()">채점하기</button>
-
+    <button onclick="handleCheck()">실력 확인하기</button>
     <div id="result"></div>
 </div>
 
 <script>
-    const allAnswerKeys = {
-        "book1": {
-            "9": "123345", "12": "123345", "17": "4255", "20": "51442", "25": "454252", "30": "2413", "35": "4343",
-            "42": "142555", "45": "5123", "50": "42422", "53": "5311", "58": "2432", "62": "5523", "66": "5513",
-            "72": "234451", "75": "5454", "77": "3152", "82": "345", "86": "43534", "90": "3554",
-            "96": "231521", "99": "221", "101": "5232", "104": "213325", "108": "452", "112": "51534",
-            "117": "143", "120": "454112", "124": "3441", "130": "13154", "134": "2121", "138": "33423",
-            "143": "441", "146": "134323", "149": "3355", "154": "432", "158": "14543", "162": "234",
-            "167": "25433", "172": "453212", "176": "253", "182": "5522", "186": "135", "190": "2515",
-            "195": "1542", "200": "33", "204": "234", "208": "3423", "212": "1412", "217": "3244",
-            "224": "4342", "227": "5411", "229": "445", "234": "4455", "238": "3315", "242": "44435",
-            "247": "1515", "252": "5123", "256": "543", "259": "411", "262": "3435", "266": "2343"
+    const weekData = {
+        chwi: {
+            1: [{t:"광역학 치료", p:7, a:"422", c:"doc"}, {t:"흩어진 개방 경지", p:11, a:"453", c:"doc"}, {t:"행동 경제학", p:13, a:"532", c:"doc"}, {t:"유가 사상과 역사서 편찬", p:16, a:"134123", c:"doc"}, {t:"패강랭", p:20, a:"2531", c:"lit"}, {t:"배를 밀며 외", p:24, a:"452211", c:"lit"}, {t:"윤지경전", p:28, a:"5532", c:"lit"}, {t:"성산별곡", p:31, a:"454", c:"lit"}],
+            2: [{t:"항미생물 화학제", p:37, a:"1233", c:"doc"}, {t:"러셀의 역설", p:41, a:"3523", c:"doc"}, {t:"로마법대전", p:43, a:"133", c:"doc"}, {t:"공거사의", p:45, a:"5322", c:"doc"}, {t:"조만득 씨", p:50, a:"5221", c:"lit"}, {t:"강 건너간 노래 외", p:54, a:"345", c:"lit"}, {t:"임진록", p:58, a:"12352", c:"lit"}, {t:"사미인곡 외", p:62, a:"55533", c:"lit"}],
+            3: [{t:"바르부르크 효과", p:67, a:"453", c:"doc"}, {t:"토지가치세", p:69, a:"154", c:"doc"}, {t:"한비자와 노자", p:72, a:"314454", c:"doc"}, {t:"한신전 박", p:75, a:"352", c:"doc"}, {t:"삼대", p:78, a:"1535", c:"lit"}, {t:"어느 날 고궁을 외", p:82, a:"5325", c:"lit"}, {t:"정을선전", p:86, a:"2414", c:"lit"}, {t:"월선헌십육경가 외", p:90, a:"25131", c:"lit"}],
+            4: [{t:"레이저 냉각", p:96, a:"2112", c:"doc"}, {t:"나의 정치적 효과", p:100, a:"254", c:"doc"}, {t:"북학론/중국사회", p:104, a:"145343", c:"doc"}, {t:"개념주의와 비개념주의", p:107, a:"234", c:"doc"}, {t:"토끼 이야기", p:110, a:"12544", c:"lit"}, {t:"북방에서 외", p:114, a:"314453", c:"lit"}, {t:"소현성록", p:118, a:"4345", c:"lit"}, {t:"추풍감별곡 외", p:122, a:"1354", c:"lit"}],
+            5: [{t:"앙부일구", p:127, a:"25", c:"doc"}, {t:"사진기/사진미학", p:130, a:"32144", c:"doc"}, {t:"선거의 선택 이론", p:133, a:"235", c:"doc"}, {t:"유가 전통의 몸", p:135, a:"3525", c:"doc"}, {t:"밤의 일기", p:140, a:"2543", c:"lit"}, {t:"선한 나무 외", p:144, a:"152", c:"lit"}, {t:"낙성비룡", p:148, a:"512", c:"lit"}, {t:"관동별곡 외", p:152, a:"4542", c:"lit"}],
+            6: [{t:"세포의 분화", p:158, a:"452", c:"doc"}, {t:"서양과 동양의 천문", p:162, a:"254522", c:"doc"}, {t:"교육과 기술", p:165, a:"353", c:"doc"}, {t:"인격체의 살생", p:167, a:"142", c:"doc"}, {t:"전황당인보기", p:170, a:"1133", c:"lit"}, {t:"고향 앞에서 외", p:173, a:"131", c:"lit"}, {t:"장백전", p:176, a:"1332", c:"lit"}, {t:"우부가 외", p:180, a:"12525", c:"lit"}],
+            7: [{t:"창자의 세포", p:186, a:"442", c:"doc"}, {t:"행정입법", p:189, a:"51543", c:"doc"}, {t:"계약의 개념", p:193, a:"35131", c:"doc"}, {t:"의식과 지각", p:196, a:"131234", c:"doc"}, {t:"차나 한잔", p:202, a:"3353", c:"lit"}, {t:"초가 외", p:206, a:"332414", c:"lit"}, {t:"반씨전", p:210, a:"121", c:"lit"}, {t:"상춘곡 외", p:214, a:"54235", c:"lit"} ]
         },
-        "batang1": {
-            "common": "3131534424443224252335553424551332",
-            "hwajak": "41334234554",
-            "unmae": "42532135342"
+        book1: {
+            1: [{t:"조화와 균형", p:9, a:"2335", c:"doc"}, {t:"근대 정치 사상사", p:17, a:"4255", c:"doc"}, {t:"그리움 외", p:20, a:"51442", c:"lit"}, {t:"EBS 수특", p:25, a:"454252", c:"lit"}, {t:"북새곡 외", p:30, a:"2413", c:"lit"}, {t:"EBS 수완", p:35, a:"4343", c:"lit"}],
+            2: [{t:"법 해석/담보/보증", p:42, a:"142555", c:"doc"}, {t:"칸트/인격 동일성", p:45, a:"5123", c:"doc"}, {t:"EBS 수특 독서", p:50, a:"42422", c:"doc"}, {t:"열팽창/액추에이터", p:53, a:"5311", c:"doc"}, {t:"수궁가", p:58, a:"2432", c:"lit"}, {t:"EBS 수특 문학", p:62, a:"5523", c:"lit"}, {t:"독가촌 풍경", p:66, a:"5513", c:"lit"}],
+            3: [{t:"법 모델/임대차", p:72, a:"234451", c:"doc"}, {t:"자유의지 논쟁", p:75, a:"5454", c:"doc"}, {t:"데이터 처리", p:77, a:"3152", c:"doc"}, {t:"산상의 노래 외", p:82, a:"345", c:"lit"}, {t:"경사/달빛 외", p:86, a:"43534", c:"lit"}, {t:"살구꽃/역사", p:90, a:"3554", c:"lit"}],
+            4: [{t:"표현의 자유", p:96, a:"231521", c:"doc"}, {t:"동물감정/권리", p:99, a:"221", c:"doc"}, {t:"접근제어", p:101, a:"5232", c:"doc"}, {t:"문/가지 외", p:104, a:"213325", c:"lit"}, {t:"연륜/대장간", p:108, a:"452", c:"lit"}, {t:"교목/들길 외", p:112, a:"51534", c:"lit"}],
+            5: [{t:"카르네아데스", p:117, a:"143", c:"doc"}, {t:"에이어의 견해", p:120, a:"454112", c:"doc"}, {t:"기초 대사량", p:124, a:"3441", c:"doc"}, {t:"만흥/우언", p:130, a:"13154", c:"lit"}, {t:"화전가 외", p:134, a:"2121", c:"lit"}, {t:"동유가/해촌", p:138, a:"33423", c:"lit"}],
+            7: [{t:"유류분 제도", p:143, a:"441", c:"doc"}, {t:"헤겔 변증법", p:146, a:"134323", c:"doc"}, {t:"오디오 신호 압축", p:149, a:"3355", c:"doc"}, {t:"어부단가/소유정가", p:154, a:"432", c:"lit"}, {t:"유원십이곡+조용", p:158, a:"14543", c:"lit"}, {t:"일동장유가/화암구곡", p:162, a:"234", c:"lit"}],
+            8: [{t:"ICT 과세", p:167, a:"25433", c:"doc"}, {t:"개화", p:172, a:"453212", c:"doc"}, {t:"K-익명성", p:176, a:"253", c:"doc"}, {t:"표구된 휴지", p:182, a:"5522", c:"lit"}, {t:"소문의 벽", p:186, a:"135", c:"lit"}, {t:"풍금이 있던 자리", p:190, a:"2515", c:"lit"}],
+            9: [{t:"이중차분법", p:195, a:"1542", c:"doc"}, {t:"범주 판단", p:200, a:"33", c:"doc"}, {t:"우주선 궤도", p:204, a:"234", c:"doc"}, {t:"두 출발", p:208, a:"3423", c:"lit"}, {t:"골목 안", p:212, a:"1412", c:"lit"}, {t:"줄", p:217, a:"3244", c:"lit"}],
+            10: [{t:"상전이 현상", p:224, a:"4342", c:"doc"}, {t:"윤리 문제", p:227, a:"5411", c:"doc"}, {t:"CD 드라이브", p:229, a:"445", c:"doc"}, {t:"심생전", p:234, a:"4455", c:"lit"}, {t:"옥루몽", p:238, a:"3315", c:"lit"}, {t:"춘향전 외", p:242, a:"44435", c:"lit"}],
+            11: [{t:"통화정책", p:247, a:"1515", c:"doc"}, {t:"죄수의 딜레마", p:252, a:"5123", c:"doc"}, {t:"DNA 컴퓨팅", p:256, a:"543", c:"doc"}, {t:"멋 설", p:259, a:"411", c:"lit"}, {t:"안개", p:262, a:"3435", c:"lit"}, {t:"녹", p:266, a:"2343", c:"lit"}]
         }
     };
 
-    function toggleView() {
+    function updateUI() {
         const book = document.getElementById('bookSelect').value;
-        document.getElementById('normalInputArea').style.display = (book === 'batang1') ? 'none' : 'block';
-        document.getElementById('batangInputArea').style.display = (book === 'batang1') ? 'block' : 'none';
+        const mode = document.getElementById('modeSelect').value;
+        const isBatang = (book === 'batang1');
+        
+        // 바탕 모의고사일 때 일반 입력창들 제어
+        document.getElementById('modeGroup').style.display = isBatang ? 'none' : 'block';
+        document.getElementById('ansGroup').style.display = isBatang ? 'none' : 'block';
+        document.getElementById('singleInputArea').style.display = isBatang ? 'none' : (mode === 'single' ? 'block' : 'none');
+        document.getElementById('weekInputArea').style.display = isBatang ? 'none' : (mode === 'week' ? 'block' : 'none');
+        
+        // 과목 필터링 UI (주차별 채점 시에만 노출, 바탕일 땐 무조건 숨김)
+        document.getElementById('subjectFilterGroup').style.display = (!isBatang && mode === 'week') ? 'block' : 'none';
+
+        // 바탕 전용 UI
+        document.getElementById('batangInputArea').style.display = isBatang ? 'block' : 'none';
+        
         document.getElementById('result').innerHTML = "";
     }
 
     function cleanAns(str) {
-        if (!str) return "";
-        return str.replace(/①/g, '1').replace(/②/g, '2').replace(/③/g, '3').replace(/④/g, '4').replace(/⑤/g, '5').replace(/[^1-5]/g, '');
+        if(!str) return "";
+        return str.replace(/①/g,'1').replace(/②/g,'2').replace(/③/g,'3').replace(/④/g,'4').replace(/⑤/g,'5').replace(/[^1-5]/g,'');
     }
 
-    function check() {
+    function handleCheck() {
         const book = document.getElementById('bookSelect').value;
+        const mode = document.getElementById('modeSelect').value;
         const resultDiv = document.getElementById('result');
-        let wrongPositions = [];
+        resultDiv.innerHTML = "";
 
+        // 1. 바탕 모의고사 채점 로직
         if (book === 'batang1') {
-            const subject = document.getElementById('subjectSelect').value;
-            const userCommon = cleanAns(document.getElementById('commonAns').value);
-            const userSelect = cleanAns(document.getElementById('selectAns').value);
+            const sub = document.getElementById('subjectSelect').value;
+            const uCom = cleanAns(document.getElementById('commonAns').value);
+            const uSel = cleanAns(document.getElementById('selectAns').value);
+            const cCom = "3131534424443224252335553424551332";
+            const cSel = (sub==='hwajak') ? "41334234554" : "42532135342";
             
-            const correctCommon = allAnswerKeys.batang1.common;
-            const correctSelect = allAnswerKeys.batang1[subject];
+            if(uCom.length !== 34 || uSel.length !== 11) {
+                resultDiv.innerHTML = `<div class='res-item res-info'>답안 길이를 확인해 주세요.<br>공통:${uCom.length}/34, 선택:${uSel.length}/11</div>`;
+                return;
+            }
+            let wrongs = [];
+            for(let i=0; i<34; i++) if(uCom[i]!==cCom[i]) wrongs.push(i+1);
+            for(let i=0; i<11; i++) if(uSel[i]!==cSel[i]) wrongs.push(i+35);
+            showSimpleResult(wrongs, resultDiv);
+            return;
+        }
 
-            if (userCommon.length !== 34 || userSelect.length !== 11) {
-                resultDiv.innerHTML = `<div class='info'>글자 수를 확인해 주세요.<br>(현재 공통:${userCommon.length}/34, 선택:${userSelect.length}/11)</div>`;
+        // 2. 주차별 일괄 채점 로직
+        if (mode === 'week') {
+            const week = document.getElementById('weekInput').value;
+            const subFilter = document.getElementById('subjectFilter').value;
+            const userFullAns = cleanAns(document.getElementById('answerInput').value);
+            
+            if(!weekData[book][week]) {
+                resultDiv.innerHTML = "<div class='res-item res-info'>해당 주차의 데이터를 찾을 수 없습니다.</div>";
                 return;
             }
 
-            for (let i = 0; i < 34; i++) {
-                if (userCommon[i] !== correctCommon[i]) wrongPositions.push(i + 1);
-            }
-            for (let i = 0; i < 11; i++) {
-                if (userSelect[i] !== correctSelect[i]) wrongPositions.push(i + 35);
+            const targets = weekData[book][week].filter(item => subFilter === 'all' || item.c === subFilter);
+            let totalCorrect = "";
+            targets.forEach(item => totalCorrect += item.a);
+
+            if (userFullAns.length !== totalCorrect.length) {
+                const subTitle = subFilter === 'doc' ? '독서만' : (subFilter === 'lit' ? '문학만' : '전체');
+                resultDiv.innerHTML = `<div class='res-item res-info'><b>[${subTitle}]</b> 문항 수가 다릅니다.<br>입력: ${userFullAns.length}개 / 필요: ${totalCorrect.length}개</div>`;
+                return;
             }
 
-        } else {
-            const inputPage = parseInt(document.getElementById('pageInput').value.trim());
+            let offset = 0;
+            let finalHtml = "";
+            let anyWrong = false;
+            targets.forEach(passage => {
+                let pWrongs = [];
+                for (let i = 0; i < passage.a.length; i++) {
+                    if (userFullAns[offset + i] !== passage.a[i]) pWrongs.push(i + 1);
+                }
+                const badge = passage.c === 'doc' ? '<span class="badge badge-doc">독서</span>' : '<span class="badge badge-lit">문학</span>';
+                if (pWrongs.length > 0) {
+                    anyWrong = true;
+                    finalHtml += `<div class='res-item res-error'>${badge} <b><${passage.t}></b> (${passage.p}p)<br>❌ 오답: ${pWrongs.join(', ')}번</div>`;
+                }
+                offset += passage.a.length;
+            });
+
+            if (!anyWrong) resultDiv.innerHTML = "<div class='res-item res-success'>💯 만점입니다! 정말 대단해요!</div>";
+            else resultDiv.innerHTML = finalHtml;
+
+        } 
+        // 3. 지문/페이지별 개별 채점 로직
+        else {
+            const inputP = parseInt(document.getElementById('pageInput').value);
             const userAns = cleanAns(document.getElementById('answerInput').value);
-            const currentKey = allAnswerKeys[book];
-
-            // 페이지 찾기 (입력값, 입력값-1, 입력값+1 순서로 확인)
-            let foundPage = null;
-            if (currentKey[inputPage]) {
-                foundPage = inputPage;
-            } else if (currentKey[inputPage - 1]) {
-                foundPage = inputPage - 1;
-            } else if (currentKey[inputPage + 1]) {
-                foundPage = inputPage + 1;
+            let found = null;
+            for (let w in weekData[book]) {
+                found = weekData[book][w].find(it => Math.abs(it.p - inputP) <= 1);
+                if (found) break;
             }
 
-            if (!foundPage) {
-                resultDiv.innerHTML = "<div class='info'>입력한 페이지(±1) 근처에 정답 정보가 없습니다.</div>";
+            if (!found) {
+                resultDiv.innerHTML = "<div class='res-item res-info'>해당 페이지 근처에 지문 정보가 없습니다.</div>";
                 return;
             }
 
-            const correctAns = currentKey[foundPage];
-            if (userAns.length !== correctAns.length) {
-                resultDiv.innerHTML = `<div class='info'>[P.${foundPage} 기준] 총 ${correctAns.length}개의 답이 필요합니다.</div>`;
+            if (userAns.length !== found.a.length) {
+                resultDiv.innerHTML = `<div class='res-item res-info'><b><${found.t}></b> 지문은 총 ${found.a.length}문항입니다.</div>`;
                 return;
             }
 
-            for (let i = 0; i < correctAns.length; i++) {
-                if (userAns[i] !== correctAns[i]) wrongPositions.push(i + 1);
-            }
-            
-            // 만약 보정된 페이지가 쓰였다면 사용자에게 알려줌
-            if (foundPage !== inputPage) {
-                resultDiv.innerHTML += `<div style="font-size:11px; color:#7f8c8d; margin-bottom:5px;">* P.${foundPage} 정답으로 채점되었습니다.</div>`;
-            }
-        }
+            let wrongs = [];
+            for (let i = 0; i < found.a.length; i++) if (userAns[i] !== found.a[i]) wrongs.push(i + 1);
 
-        if (wrongPositions.length === 0) {
-            resultDiv.innerHTML = "<div class='success'>🎉 모두 정답입니다!</div>";
-        } else {
-            resultDiv.innerHTML = `<div class='error'>❌ 오답 번호: ${wrongPositions.join(', ')}번</div>`;
+            if (wrongs.length === 0) resultDiv.innerHTML = `<div class='res-item res-success'>🎉 <b><${found.t}></b> (${found.p}p) 모두 정답입니다!</div>`;
+            else resultDiv.innerHTML = `<div class='res-item res-error'>❌ <b><${found.t}></b> (${found.p}p)<br>오답: ${wrongs.join(', ')}번</div>`;
         }
+    }
+
+    function showSimpleResult(wrongs, div) {
+        if (wrongs.length === 0) div.innerHTML = "<div class='res-item res-success'>🎉 만점입니다! 완벽해요.</div>";
+        else div.innerHTML = `<div class='res-item res-error'>❌ 오답 번호: ${wrongs.join(', ')}번</div>`;
     }
 </script>
 </body>
