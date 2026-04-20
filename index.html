@@ -28,9 +28,10 @@
         .res-success { background: #ebf7ee; color: var(--success); border-left-color: var(--success); }
         .res-error { background: #fdf2f2; color: var(--error); border-left-color: var(--error); }
         .res-info { background: #f4f7f6; color: #555; border-left-color: #7f8c8d; }
-        .badge { display: inline-block; padding: 2px 8px; border-radius: 5px; font-size: 11px; margin-right: 6px; font-weight: 800; color: white; text-transform: uppercase; }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 5px; font-size: 11px; margin-right: 6px; font-weight: 800; color: white; text-transform: uppercase; vertical-align: middle; }
         .badge-doc { background: #3498db; }
         .badge-lit { background: #9b59b6; }
+        .badge-yeon { background: #e67e22; }
     </style>
 </head>
 <body>
@@ -43,6 +44,7 @@
         <select id="bookSelect" onchange="updateUI()">
             <option value="book1">일클래스 (日)</option>
             <option value="chwi">취클래스 (就)</option>
+            <option value="yeonpil">취클래스 연필통 (就)</option>
             <option value="batang1">바탕 모의고사 1회</option>
         </select>
     </div>
@@ -64,17 +66,22 @@
         </select>
     </div>
 
-    <div id="singleInputArea">
-        <div class="input-group">
-            <label>교재 페이지 번호</label>
-            <input type="number" id="pageInput" placeholder="페이지 번호 (±1 보정 가능)" inputmode="numeric">
-        </div>
-    </div>
-
     <div id="weekInputArea" style="display:none;">
         <div class="input-group">
             <label>학습 주차</label>
             <input type="number" id="weekInput" placeholder="숫자만 입력 (예: 1)" inputmode="numeric">
+        </div>
+    </div>
+
+    <div id="startNumArea" class="input-group" style="display:none;">
+        <label>시작 문제 번호</label>
+        <input type="number" id="startNumInput" placeholder="채점을 시작할 번호" inputmode="numeric">
+    </div>
+
+    <div id="singleInputArea">
+        <div class="input-group">
+            <label>교재 페이지 번호</label>
+            <input type="number" id="pageInput" placeholder="페이지 번호 (±1 보정 가능)" inputmode="numeric">
         </div>
     </div>
 
@@ -128,25 +135,29 @@
         }
     };
 
+    const yeonData = {
+        1: "51334522152523123154243241432214313523253324514211555214411554442521353145521423335543212452",
+        2: "24151322452335431353123542324433322532424145342325433354115522133545341342541412522324425",
+        3: "1451341451545415225432453354244531125252543344445544244352443522533515343241425411523434212",
+        4: "543234455314335225453145231213452142134331412243542413552233541332132444431322144452445",
+        5: "5155425332444542551134232313415335334233134243412331432534121343513135153521121133332543311",
+        6: "32552143543524255135221353552521134243422355445141235234235414325431343215135541421125",
+        7: "2253244241251335224425153554253553442312444231251452122432414553315324514311234454415123"
+    };
+
     function updateUI() {
         const book = document.getElementById('bookSelect').value;
         const mode = document.getElementById('modeSelect').value;
         const isBatang = (book === 'batang1');
+        const isYeon = (book === 'yeonpil');
         
-        // 바탕 모의고사 여부에 따른 기본 제어
-        document.getElementById('modeGroup').style.display = isBatang ? 'none' : 'block';
+        document.getElementById('modeGroup').style.display = (isBatang || isYeon) ? 'none' : 'block';
         document.getElementById('ansGroup').style.display = isBatang ? 'none' : 'block';
-        
-        // 개별/주차 입력창 제어
-        document.getElementById('singleInputArea').style.display = (!isBatang && mode === 'single') ? 'block' : 'none';
-        document.getElementById('weekInputArea').style.display = (!isBatang && mode === 'week') ? 'block' : 'none';
-        
-        // 핵심 수정: 주차별 채점 모드일 때만 '채점 범위 설정(독서/문학)' 필터 노출
-        document.getElementById('subjectFilterGroup').style.display = (!isBatang && mode === 'week') ? 'block' : 'none';
-
-        // 바탕 모의고사 전용 UI
+        document.getElementById('weekInputArea').style.display = (isBatang) ? 'none' : (mode === 'week' || isYeon ? 'block' : 'none');
+        document.getElementById('startNumArea').style.display = isYeon ? 'block' : 'none';
+        document.getElementById('singleInputArea').style.display = (!isBatang && !isYeon && mode === 'single') ? 'block' : 'none';
+        document.getElementById('subjectFilterGroup').style.display = (!isBatang && !isYeon && mode === 'week') ? 'block' : 'none';
         document.getElementById('batangInputArea').style.display = isBatang ? 'block' : 'none';
-        
         document.getElementById('result').innerHTML = "";
     }
 
@@ -157,10 +168,41 @@
 
     function handleCheck() {
         const book = document.getElementById('bookSelect').value;
-        const mode = document.getElementById('modeSelect').value;
         const resultDiv = document.getElementById('result');
         resultDiv.innerHTML = "";
 
+        if (book === 'yeonpil') {
+            const week = document.getElementById('weekInput').value;
+            const startNum = parseInt(document.getElementById('startNumInput').value);
+            const userAns = cleanAns(document.getElementById('answerInput').value);
+            
+            if (!yeonData[week]) {
+                resultDiv.innerHTML = "<div class='res-item res-info'>주차 정보를 입력해주세요 (1~7).</div>";
+                return;
+            }
+            if (isNaN(startNum) || startNum < 1) {
+                resultDiv.innerHTML = "<div class='res-item res-info'>시작 번호를 입력해주세요.</div>";
+                return;
+            }
+
+            const correctString = yeonData[week];
+            let wrongs = [];
+            for (let i = 0; i < userAns.length; i++) {
+                const currentNum = startNum + i;
+                const correctChar = correctString[currentNum - 1];
+                if (!correctChar) break;
+                if (userAns[i] !== correctChar) wrongs.push(currentNum);
+            }
+
+            if (wrongs.length === 0) {
+                resultDiv.innerHTML = `<div class='res-item res-success'>🎉 연필통 ${week}주차 ${startNum}번~ 모두 정답!</div>`;
+            } else {
+                resultDiv.innerHTML = `<div class='res-item res-error'><span class='badge badge-yeon'>연필통 ${week}주차</span><br>❌ 오답 번호: ${wrongs.join(', ')}번</div>`;
+            }
+            return;
+        }
+
+        const mode = document.getElementById('modeSelect').value;
         if (book === 'batang1') {
             const sub = document.getElementById('subjectSelect').value;
             const uCom = cleanAns(document.getElementById('commonAns').value);
@@ -168,50 +210,40 @@
             const cCom = "3131534424443224252335553424551332";
             const cSel = (sub==='hwajak') ? "41334234554" : "42532135342";
             if(uCom.length !== 34 || uSel.length !== 11) {
-                resultDiv.innerHTML = `<div class='res-item res-info'>답안 길이를 확인해 주세요.<br>공통:${uCom.length}/34, 선택:${uSel.length}/11</div>`;
+                resultDiv.innerHTML = `<div class='res-item res-info'>공통: ${uCom.length}/34, 선택: ${uSel.length}/11</div>`;
                 return;
             }
             let wrongs = [];
             for(let i=0; i<34; i++) if(uCom[i]!==cCom[i]) wrongs.push(i+1);
             for(let i=0; i<11; i++) if(uSel[i]!==cSel[i]) wrongs.push(i+35);
             showSimpleResult(wrongs, resultDiv);
-            return;
-        }
-
-        if (mode === 'week') {
+        } else if (mode === 'week') {
             const week = document.getElementById('weekInput').value;
             const subFilter = document.getElementById('subjectFilter').value;
             const userFullAns = cleanAns(document.getElementById('answerInput').value);
-            if(!weekData[book][week]) {
-                resultDiv.innerHTML = "<div class='res-item res-info'>데이터를 찾을 수 없습니다.</div>";
-                return;
-            }
             const targets = weekData[book][week].filter(item => subFilter === 'all' || item.c === subFilter);
             let totalCorrect = "";
             targets.forEach(item => totalCorrect += item.a);
-
             if (userFullAns.length !== totalCorrect.length) {
-                resultDiv.innerHTML = `<div class='res-item res-info'>문항 수가 다릅니다.<br>입력: ${userFullAns.length}개 / 필요: ${totalCorrect.length}개</div>`;
+                resultDiv.innerHTML = `<div class='res-item res-info'>입력: ${userFullAns.length}개 / 필요: ${totalCorrect.length}개</div>`;
                 return;
             }
-
-            let offset = 0;
-            let finalHtml = "";
-            let anyWrong = false;
+            let offset = 0, finalHtml = "", anyWrong = false;
             targets.forEach(passage => {
                 let pWrongs = [];
                 for (let i = 0; i < passage.a.length; i++) if (userFullAns[offset + i] !== passage.a[i]) pWrongs.push(i + 1);
+                
                 const badge = passage.c === 'doc' ? '<span class="badge badge-doc">독서</span>' : '<span class="badge badge-lit">문학</span>';
+                
                 if (pWrongs.length > 0) {
                     anyWrong = true;
+                    // 지문명 옆에 페이지(p) 정보 추가
                     finalHtml += `<div class='res-item res-error'>${badge} <b><${passage.t}></b> (${passage.p}p)<br>❌ 오답: ${pWrongs.join(', ')}번</div>`;
                 }
                 offset += passage.a.length;
             });
-            if (!anyWrong) resultDiv.innerHTML = "<div class='res-item res-success'>💯 만점입니다! 정말 대단해요!</div>";
-            else resultDiv.innerHTML = finalHtml;
-        } 
-        else {
+            resultDiv.innerHTML = anyWrong ? finalHtml : "<div class='res-item res-success'>💯 만점!</div>";
+        } else {
             const inputP = parseInt(document.getElementById('pageInput').value);
             const userAns = cleanAns(document.getElementById('answerInput').value);
             let found = null;
@@ -219,24 +251,18 @@
                 found = weekData[book][w].find(it => Math.abs(it.p - inputP) <= 1);
                 if (found) break;
             }
-            if (!found) {
-                resultDiv.innerHTML = "<div class='res-item res-info'>페이지를 다시 확인해 주세요.</div>";
-                return;
-            }
-            if (userAns.length !== found.a.length) {
-                resultDiv.innerHTML = `<div class='res-item res-info'><b><${found.t}></b> 지문은 ${found.a.length}문항입니다.</div>`;
-                return;
-            }
+            if (!found) { resultDiv.innerHTML = "페이지 오류"; return; }
             let wrongs = [];
             for (let i = 0; i < found.a.length; i++) if (userAns[i] !== found.a[i]) wrongs.push(i + 1);
-            if (wrongs.length === 0) resultDiv.innerHTML = `<div class='res-item res-success'>🎉 <b><${found.t}></b> 모두 정답입니다!</div>`;
-            else resultDiv.innerHTML = `<div class='res-item res-error'>❌ <b><${found.t}></b> (${found.p}p)<br>오답: ${wrongs.join(', ')}번</div>`;
+            
+            const badge = found.c === 'doc' ? '<span class="badge badge-doc">독서</span>' : '<span class="badge badge-lit">문학</span>';
+            // 개별 채점 시에도 페이지 정보 노출
+            resultDiv.innerHTML = wrongs.length === 0 ? `💯 ${badge} <b><${found.t}></b> (${found.p}p) 정답!` : `${badge} <b><${found.t}></b> (${found.p}p) ❌ 오답: ${wrongs.join(', ')}번`;
         }
     }
 
     function showSimpleResult(wrongs, div) {
-        if (wrongs.length === 0) div.innerHTML = "<div class='res-item res-success'>🎉 만점입니다! 완벽해요.</div>";
-        else div.innerHTML = `<div class='res-item res-error'>❌ 오답 번호: ${wrongs.join(', ')}번</div>`;
+        div.innerHTML = wrongs.length === 0 ? "💯 만점!" : `❌ 오답: ${wrongs.join(', ')}번`;
     }
 </script>
 </body>
